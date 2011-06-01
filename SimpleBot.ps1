@@ -63,16 +63,18 @@
     }
      
     function ChannelMessage {
+	   Write-Host "Channel Message Received"
        $Data = $_.Data
        #Write-Host $Data.From
        #Write-Host $Data.Channel
        #Write-Host $Data.Message
-       #Write-Host $($Data | Out-String)
+       Write-Host $($Data | Out-String)
        
        $command, $params = $Data.MessageArray
        if($SimpleBotPrivateCommands.ContainsKey($command)) {
           &$SimpleBotPrivateCommands[$command] $params $Data | Out-String -width (510 - $Data.Channel.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendMessage("Message", $Data.Channel, $_.Trim() ) }}
        }
+	   Write-Host "Channel Message Done"
     }
      
     ####################################################################################################
@@ -98,9 +100,8 @@
      
     #A sample command to get you started
     $SimpleBotPublicCommands."Hello" = {Param($Query,$Data)
-       "Hello, $($Data.Nick)! My Name is SimpleBot"
+       "Hello, $($Data.Nick)!"
     }
-	
     
     ##$SimpleBotCommands."!Echo" = {Param($Query,$Data)
     ##   "$Query"

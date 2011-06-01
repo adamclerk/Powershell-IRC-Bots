@@ -6,7 +6,7 @@ Get-ChildItem c:\ps1\irc\lib\*.ps1 | % {
 	  #write-host $_
 }
 Write-Host "----------------------"
-Get-ChildItem c:\ps1\irc\*Bot.ps1 | % { 
+Get-ChildItem c:\ps1\irc\SimpleBot.ps1 | % { 
       . $_
       write-host "Loading Bot:`t$($_.name)"
 	  #write-host $_

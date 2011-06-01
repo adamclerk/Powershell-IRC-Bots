@@ -6,7 +6,7 @@
     ## http://voxel.dl.sourceforge.net/sourceforge/smartirc4net/SmartIrc4net-0.4.0.bin.tar.bz2
 	## Documentation: http://smartirc4net.meebey.net/docs/0.4.0/html/Meebey.SmartIrc4net.IrcClient.html
     ####################################################################################################
-    Add-Type -path c:\SmartIrc4net.dll
+    Add-Type -path .\SmartIrc4net.dll
     #$null = [Reflection.Assembly]::LoadFrom("c:\Libraries\Meebey.SmartIrc4net.dll")
      
     function Start-TodoBot {
