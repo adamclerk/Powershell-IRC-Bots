@@ -1,4 +1,4 @@
-    ## TodoBot 2.0
+    ## SimpleBot 2.0
     ## A simple framework to get you started writing your own IRC bots in PowerShell
     ####################################################################################################
     ## Requires Meebey.SmartIrc4net.dll to be in your ...\WindowsPowerShell\Libraries\
@@ -6,11 +6,11 @@
     ## http://voxel.dl.sourceforge.net/sourceforge/smartirc4net/SmartIrc4net-0.4.0.bin.tar.bz2
 	## Documentation: http://smartirc4net.meebey.net/docs/0.4.0/html/Meebey.SmartIrc4net.IrcClient.html
     ####################################################################################################
-    Add-Type -path c:\SmartIrc4net.dll
+    Add-Type -path .\SmartIrc4net.dll
     #$null = [Reflection.Assembly]::LoadFrom("c:\Libraries\Meebey.SmartIrc4net.dll")
      
-    function Start-TodoBot {
-    PARAM( $server = "10.1.3.125", [string[]]$channels = @("#deploy"), [string[]]$nick     = @("TodoBot"), [string]$password, $realname = "TodoBot for deployment", $port               = 6667)
+    function Start-SimpleBot {
+    PARAM( $server = "10.1.3.125", [string[]]$channels = @("#deploy"), [string[]]$nick     = @("SimpleBot"), [string]$password, $realname = "SimpleBot for deployment", $port               = 6667)
      
        if(!$global:irc) {
           $global:irc = New-Object Meebey.SmartIrc4net.IrcClient
@@ -25,16 +25,16 @@
        $irc.Login($nick, $realname, 0, $nick, $password)
        ## $channels | % { $irc.RfcJoin( $_ ) }
        foreach($channel in $channels) { $irc.RfcJoin( $channel ) }
-       Resume-TodoBot # Shortcut so starting this thing up only takes one command
+       Resume-SimpleBot # Shortcut so starting this thing up only takes one command
     }
      
-    ## Note that TodoBot stops listening if you press a key ...
-    ## You'll have to re-run Resume-TodoBot to get him to listen again
-    function Resume-TodoBot {
+    ## Note that SimpleBot stops listening if you press a key ...
+    ## You'll have to re-run Resume-SimpleBot to get him to listen again
+    function Resume-SimpleBot {
        while(!$Host.UI.RawUI.KeyAvailable) { $irc.ListenOnce($false) }
     }
      
-    function Stop-TodoBot {
+    function Stop-SimpleBot {
        $irc.RfcQuit("If people listened to themselves more often, they would talk less.")
        $irc.Disconnect()
     }
@@ -57,8 +57,8 @@
        #Write-Host $($Data | Out-String)
        
        $command, $params = $Data.MessageArray
-       if($TodoBotPublicCommands.ContainsKey($command)) {
-		  &$TodoBotPublicCommands[$command] $params $Data |  Out-String -width (510 - $Data.From.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendReply($Data, $_.Trim() ) }}
+       if($SimpleBotPublicCommands.ContainsKey($command)) {
+		  &$SimpleBotPublicCommands[$command] $params $Data |  Out-String -width (510 - $Data.From.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendReply($Data, $_.Trim() ) }}
        }
     }
      
@@ -70,13 +70,13 @@
        #Write-Host $($Data | Out-String)
        
        $command, $params = $Data.MessageArray
-       if($TodoBotPrivateCommands.ContainsKey($command)) {
-          &$TodoBotPrivateCommands[$command] $params $Data | Out-String -width (510 - $Data.Channel.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendMessage("Message", $Data.Channel, $_.Trim() ) }}
+       if($SimpleBotPrivateCommands.ContainsKey($command)) {
+          &$SimpleBotPrivateCommands[$command] $params $Data | Out-String -width (510 - $Data.Channel.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendMessage("Message", $Data.Channel, $_.Trim() ) }}
        }
     }
      
     ####################################################################################################
-    ## The TodoBotCommands hashtable is extremely simple ...
+    ## The SimpleBotCommands hashtable is extremely simple ...
     ##
     ## You register a "command" which must be the FIRST WORD of a message (either private, or channel)
     ##   and you provide a scriptblock to process said message.  
@@ -92,28 +92,22 @@
     ## NOTE 2: 510 is the Max IRC Message Length, including the channel name etc.
     ##         http`://www.faqs.org/rfcs/rfc1459.html
     ##
-    $TodoBotPublicCommands=@{}
-	$TodoBotPrivateCommands=@{}
+    
+	$SimpleBotPublicCommands=@{}
+	$SimpleBotPrivateCommands=@{}
      
-    ## A sample command to get you started
-#    $TodoBotPublicCommands."Hello" = {Param($Query,$Data)
-#       "Hello, $($Data.Nick)!"
-#    }
-	
-	$TodoBotPublicCommands."Todo" = {Param($Query,$Data)
-		.\Todo.ps1 $Query $Data
+    #A sample command to get you started
+    $SimpleBotPublicCommands."Hello" = {Param($Query,$Data)
+       "Hello, $($Data.Nick)! My Name is SimpleBot"
     }
 	
-	$TodoBotPrivateCommands."Todo" = {Param($Query, $Data)
-		.\Todo.ps1 $Query $Data
-	}
-     
-    ##$TodoBotCommands."!Echo" = {Param($Query,$Data)
+    
+    ##$SimpleBotCommands."!Echo" = {Param($Query,$Data)
     ##   "$Query"
     ##}
     ##
      
-#    $TodoBotPublicCommands."!Get-Help" = {Param($Query)
+#    $SimpleBotPublicCommands."!Get-Help" = {Param($Query)
 #       $help = get-help $Query | Select Name,Synopsis,Syntax
 #       if($?) {
 #          if($help -is [array]) {
