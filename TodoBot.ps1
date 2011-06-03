@@ -10,15 +10,16 @@
     #$null = [Reflection.Assembly]::LoadFrom("c:\Libraries\Meebey.SmartIrc4net.dll")
      
     function Start-TodoBot {
-    PARAM( $server = "10.1.3.125", [string[]]$channels = @("#deploy"), [string[]]$nick     = @("TodoBot"), [string]$password, $realname = "TodoBot for deployment", $port               = 6667)
+    #PARAM( $server = "10.1.3.125", [string[]]$channels = @("#deploy"), [string[]]$nick     = @("TodoBot"), [string]$password, $realname = "TodoBot for deployment", $port               = 6667)
+	PARAM( $server = "broadway.ny.us.dal.net", [string[]]$channels = @("#bottraining"), [string[]]$nick     = @("TodoBot"), [string]$password, $realname = "TodoBot for deployment", $port               = 6665)
      
        if(!$global:irc) {
           $global:irc = New-Object Meebey.SmartIrc4net.IrcClient
           $irc.ActiveChannelSyncing = $true # $irc will track channels for us
           # $irc.Encoding = [Text.Encoding]::UTF8
-          # $irc.Add_OnError( {Write-Error $_.ErrorMessage} )
+          #$irc.Add_OnError( {Write-Error $_.ErrorMessage} )
           $irc.Add_OnQueryMessage( {PrivateMessage} )
-          $irc.Add_OnChannelMessage( {ChannelMessage} )
+          #$irc.Add_OnChannelMessage( {ChannelMessage} )
        }
        
        $irc.Connect($server, $port)
@@ -35,8 +36,9 @@
     }
      
     function Stop-TodoBot {
-       $irc.RfcQuit("If people listened to themselves more often, they would talk less.")
-       $irc.Disconnect()
+       	$irc.RfcQuit("If people listened to themselves more often, they would talk less.")
+       	$irc.Disconnect()
+		$global:irc.dispose()
     }
      
     ####################################################################################################
@@ -57,10 +59,10 @@
        #Write-Host $($Data | Out-String)
        
        $command, $params = $Data.MessageArray
-       if($TodoBotPublicCommands.ContainsKey($command)) {
-		  &$TodoBotPublicCommands[$command] $params $Data |  Out-String -width (510 - $Data.From.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendReply($Data, $_.Trim() ) }}
-       }
-    }
+       if($TodoBotPrivateCommands.ContainsKey($command)) {
+		  &$TodoBotPrivateCommands[$command] $params $Data |  Out-String -width (510 - $Data.From.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendReply($Data, $_.Trim(), "High" ) }}
+		}
+	}
      
     function ChannelMessage {
        $Data = $_.Data
@@ -70,8 +72,8 @@
        #Write-Host $($Data | Out-String)
        
        $command, $params = $Data.MessageArray
-       if($TodoBotPrivateCommands.ContainsKey($command)) {
-          &$TodoBotPrivateCommands[$command] $params $Data | Out-String -width (510 - $Data.Channel.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendMessage("Message", $Data.Channel, $_.Trim() ) }}
+       if($TodoBotPublicCommands.ContainsKey($command)) {
+          &$TodoBotPublicCommands[$command] $params $Data | Out-String -width (510 - $Data.Channel.Length - $nick.Length - 3) | % { $_.Trim().Split("`n") | %{ $irc.SendMessage("Message", $Data.Channel, $_.Trim() ) }}
        }
     }
      
@@ -94,34 +96,35 @@
     ##
     $TodoBotPublicCommands=@{}
 	$TodoBotPrivateCommands=@{}
-     
-    ## A sample command to get you started
-#    $TodoBotPublicCommands."Hello" = {Param($Query,$Data)
-#       "Hello, $($Data.Nick)!"
-#    }
-	
-	$TodoBotPublicCommands."Todo" = {Param($Query,$Data)
-		.\Todo.ps1 $Query $Data
-    }
-	
+     	
 	$TodoBotPrivateCommands."Todo" = {Param($Query, $Data)
-		.\Todo.ps1 $Query $Data
+		.\Todo.ps1 ("todo " + $Query) $Data
 	}
-     
-    ##$TodoBotCommands."!Echo" = {Param($Query,$Data)
-    ##   "$Query"
-    ##}
-    ##
-     
-#    $TodoBotPublicCommands."!Get-Help" = {Param($Query)
-#       $help = get-help $Query | Select Name,Synopsis,Syntax
-#       if($?) {
-#          if($help -is [array]) {
-#             "You're going to need to be more specific, I know all about $((($help | % { $_.Name })[0..($help.Length-2)] -join ', ') + ' and even ' + $help[-1].Name)"
-#          } else {
-#             @($help.Synopsis,($help.Syntax | Out-String -width 1000).Trim().Split("`n",4,"RemoveEmptyEntries")[0..3])
-#          }
-#       } else {
-#          "I couldn't find the help file for '$Query', sorry.  I probably don't have that snapin loaded."
-#       }
-#    }
+	
+	$TodoBotPrivateCommands."Help" = {Param($Query, $Data)
+		.\Todo.ps1 ("help" + $Query) $Data
+	}
+	
+	$TodoBotPrivateCommands."Insert" = {Param($Query, $Data)
+		.\Todo.ps1 ("insert " + $Query) $Data
+	}
+	
+	$TodoBotPrivateCommands."done" = {Param($Query, $Data)
+		.\Todo.ps1 ("done " + $Query) $Data
+	}
+	
+	$TodoBotPrivateCommands."info" = {Param($Query, $Data)
+		.\Todo.ps1 ("info " + $Query) $Data
+	}
+	
+	$TodoBotPrivateCommands."take" = {Param($Query, $Data)
+		.\Todo.ps1 ("take " + $Query) $Data
+	}
+	
+	$TodoBotPrivateCommands."add" = {Param($Query, $Data)
+		.\Todo.ps1 ("add " + $Query) $Data
+	}
+	
+	$TodoBotPrivateCommands."fail" = {Param($Query, $Data)
+		.\Todo.ps1 ("fail " + $Query) $Data
+	}
